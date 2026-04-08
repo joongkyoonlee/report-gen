@@ -18,10 +18,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI, Type } from "@google/genai";
-
-// Initialize Gemini AI
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -147,43 +143,20 @@ export default function App() {
     }
   };
 
-  // Gemini AI 기반 자동 분류 로직
+  // Gemini AI 기반 자동 분류 로직 (서버사이드 Netlify Function 호출)
   const aiClassify = async (text: string) => {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `다음은 의성군 보도자료 작성을 위한 원본 텍스트입니다. 이 내용을 분석하여 보도자료 항목별로 정리해 주세요.
-        
-        원본 텍스트:
-        ${text}
-        
-        반드시 다음 JSON 구조로 응답하세요:
-        {
-          "projectName": "사업명 (핵심 주제)",
-          "target": "대상 (누구를 위한 것인지)",
-          "background": "추진 배경 (왜 하는지)",
-          "content": "주요 내용 (무엇을 하는지, 일시/장소 포함)",
-          "effect": "기대 효과 (어떤 결과가 예상되는지)",
-          "quote": "인용문 (관련자나 군수의 예상 발언, 없으면 적절히 생성)"
-        }`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              projectName: { type: Type.STRING },
-              target: { type: Type.STRING },
-              background: { type: Type.STRING },
-              content: { type: Type.STRING },
-              effect: { type: Type.STRING },
-              quote: { type: Type.STRING },
-            },
-            required: ["projectName", "target", "background", "content", "effect", "quote"],
-          },
-        },
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
       });
 
-      const result = JSON.parse(response.text || '{}');
+      if (!response.ok) {
+        throw new Error('AI 분석 요청 실패');
+      }
+
+      const result = await response.json();
       setFormData(result);
       setActiveTab('manual');
     } catch (error) {
