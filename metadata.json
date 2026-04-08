@@ -1,0 +1,5 @@
+{
+  "name": "의성군 보도자료 AI 생성기",
+  "description": "텍스트 입력 및 PDF 분석을 통해 의성군 스타일의 공식 보도자료 초안을 자동으로 생성하는 도구입니다.",
+  "requestFramePermissions": []
+}
